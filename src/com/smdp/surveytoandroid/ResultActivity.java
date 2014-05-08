@@ -1,5 +1,6 @@
 package com.smdp.surveytoandroid;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import android.app.Activity;
@@ -20,14 +21,20 @@ public class ResultActivity extends Activity {
 		setContentView(R.layout.activity_result);
 		sendEmail = (Button) findViewById(R.id.btnSendEmail);
 
-		// get the hashmap and iterate to get the individual answers
+		// get the hash map and iterate to get the individual answers
 		Intent intent = getIntent();
-		HashMap<String, String> answers = (HashMap<String, String>) intent
+		HashMap<String, ArrayList<String>> answers = (HashMap<String, ArrayList<String>>) intent
 				.getSerializableExtra("answers");
-		for (HashMap.Entry<String, String> entry : answers.entrySet()) {
+		for (HashMap.Entry<String, ArrayList<String>> entry : answers.entrySet()) {
 			String key = entry.getKey();
-			String value = entry.getValue();
-			String question = "Question: " + key + "\n" + "Answer: " + value
+			ArrayList<String> values = entry.getValue();
+			//loop through the array list of answers and get the values
+			String result = "";
+			for (int i = 0; i < values.size(); i++) {
+				String value = values.get(i);
+				result +=value + " ";
+			}
+			String question = "Question: " + key + "\n" + "Answer: " + result
 					+ "\n";
 			Log.e("Results", question);
 			results.append(question + "\n");
@@ -42,7 +49,7 @@ public class ResultActivity extends Activity {
 				i.setType("message/rfc822");
 				i.putExtra(Intent.EXTRA_EMAIL,
 						new String[] { "maiva1337@gmail.com" });
-				i.putExtra(Intent.EXTRA_SUBJECT, "Survey results SMDP");
+				i.putExtra(Intent.EXTRA_SUBJECT, "Survey results Ask language");
 				i.putExtra(Intent.EXTRA_TEXT, results.toString());
 				try {
 					startActivity(Intent.createChooser(i, "Send mail..."));

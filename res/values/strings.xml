@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">SurveyInstance</string>
+    <string name="app_name">Survey Ask</string>
     <string name="action_settings">Settings</string>
 
     <!-- Welcome Activity -->
     <string name="welcomemessage">Welcome!</string>
-    <string name="instructions">To begin the survey please click on the START button below!</string>
+    <string name="instructions">To begin the survey please click on the Start button below!</string>
     <string name="start">Start</string>
     <!-- Question Activity -->
     <string name="surveytitle">Survey Name</string>
@@ -16,8 +16,8 @@
     <string name="openQuestion">Open Question</string>
     <string name="required">Required</string>
     <!-- Result Activity -->
-    <string name="thankyou">Thank you very much for participatin in this survey!</string>
-    <string name="sendetomail">To send the results to an email please click the button below!</string>
+    <string name="thankyou">Thank you very much for participating!</string>
+    <string name="sendetomail">To send the results as an email please click the Send button below!</string>
     <string name="send">Send</string>
 
 </resources>

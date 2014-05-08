@@ -3,14 +3,14 @@ package com.smdp.surveytoandroid;
 import java.util.ArrayList;
 
 import com.smdp.surveytoandroid.questionstructure.Choice;
-import com.smdp.surveytoandroid.questionstructure.DichotomousQuestion;
 import com.smdp.surveytoandroid.questionstructure.Fork;
 import com.smdp.surveytoandroid.questionstructure.MultipleChoiceQuestion;
 import com.smdp.surveytoandroid.questionstructure.OpenQuestion;
 import com.smdp.surveytoandroid.questionstructure.Questionable;
 import com.smdp.surveytoandroid.questionstructure.RankingQuestion;
 import com.smdp.surveytoandroid.questionstructure.RatingQuestion;
-import com.smdp.surveytoandroid.questionstructure.SumConstantQuestion;
+import com.smdp.surveytoandroid.questionstructure.StapleQuestion;
+import com.smdp.surveytoandroid.questionstructure.ConstantSumQuestion;
 import com.smdp.surveytoandroid.questionstructure.Survey;
 
 public class CodeGenData {
@@ -18,34 +18,30 @@ public class CodeGenData {
 	// NOTE casting will be required
 	private static ArrayList<Questionable> questions = new ArrayList<Questionable>();
 
-	public static ArrayList<Questionable> addQuestionsToArrList() {
-
-		/**
-		 * DECLARE CODE GENERATED DATA HERE
-		 * */
+	// get the survey name
+	public static String getSurveyName() {
 
 		// create survey
 		Survey s1 = new Survey("Survey1");
+		String surveyName = s1.getName();
+		return surveyName;
 
-		// create multiplechoice 1
+	}
 
-		Choice choice1 = new Choice("choice1", "Superman");
-		Choice choice2 = new Choice("choice2", "Batman");
-		Choice choice3 = new Choice("choice3", "Spiderman");
-		Choice choice4 = new Choice("choice4", "Flash");
+	public static ArrayList<Questionable> addQuestionsToArrList() {
+
+		// create multiple choice 1 - dichotomous like
+		Choice choice1 = new Choice("choice1", "Yes");
+		Choice choice2 = new Choice("choice2", "No");
 
 		ArrayList<Choice> arraychoice1 = new ArrayList<Choice>();
 		arraychoice1.add(choice1);
 		arraychoice1.add(choice2);
-		arraychoice1.add(choice3);
-		arraychoice1.add(choice4);
 
 		MultipleChoiceQuestion m1 = new MultipleChoiceQuestion("q1",
-				"What is your favorite super hero?", true, "testOther1",
-				arraychoice1);
+				"Are you older than 20 years?", true, "", arraychoice1);
 
-
-		// create multiplechoice 2
+		// create multiple choice 2
 		Choice choice5 = new Choice("choice5", "Thor");
 		Choice choice6 = new Choice("choice6", "Hulk");
 		Choice choice7 = new Choice("choice7", "Dr. Manhatan");
@@ -95,13 +91,6 @@ public class CodeGenData {
 		// create an open question 2
 		OpenQuestion o2 = new OpenQuestion("q9",
 				"What do you think about DC Unviverse?", false);
-		// create a dichotomous question 1
-		DichotomousQuestion d1 = new DichotomousQuestion("q6",
-				"Are you older than 20?", true);
-
-		// create a dichotomous question 2
-		DichotomousQuestion d2 = new DichotomousQuestion("q10",
-				"Are you good at playing computer games?", false);
 
 		// create sum constant question 1
 		Choice choice17 = new Choice("choice17", "Algorithms");
@@ -114,7 +103,7 @@ public class CodeGenData {
 		arraychoice5.add(choice18);
 		arraychoice5.add(choice19);
 		arraychoice5.add(choice20);
-		SumConstantQuestion sum1 = new SumConstantQuestion("q7",
+		ConstantSumQuestion sum1 = new ConstantSumQuestion("q7",
 				"Sum time spend on studying on different subjects", true, 100,
 				arraychoice5);
 
@@ -122,45 +111,42 @@ public class CodeGenData {
 		RatingQuestion rate1 = new RatingQuestion("q8", "Rate marvel", false,
 				1, 10, "aweful", "awesome");
 
-		//CREATE FORKS
-		
-		//fork1 for question 1 
+		// create stape question 1
+		StapleQuestion staple1 = new StapleQuestion("q9",
+				"Have you been following lecures", true, "yes", "somethines",
+				"no");
+
+		// CREATE FORKS
+
+		// fork1 for question 1
 		Fork m1f1 = new Fork();
 		ArrayList<Questionable> forkedQuestions1 = new ArrayList<Questionable>();
 		forkedQuestions1.add(o1);
-		m1f1.bindingChoiceQuest.put(choice1.getName(),forkedQuestions1);
-		
-		//fork2 for question 1 
+		m1f1.bindingChoiceQuest.put(choice1.getName(), forkedQuestions1);
+
+		// fork2 for question 1
 		Fork m1f2 = new Fork();
 		ArrayList<Questionable> forkedQuestions2 = new ArrayList<Questionable>();
-		forkedQuestions2.add(d2);
-		m1f2.bindingChoiceQuest.put(choice2.getName(),forkedQuestions2);
-		
-		//add forks to question1
+		forkedQuestions2.add(m1);
+		m1f2.bindingChoiceQuest.put(choice2.getName(), forkedQuestions2);
+
+		// add forks to question1
 		m1.forks.add(m1f1);
 		m1.forks.add(m1f2);
-		
-		
-		// add questions to the Questionable arraylist
 
-		questions.add(r1);
+		// add questions to the Questionable array list
 		questions.add(m1);
 		questions.add(m2);
+		questions.add(staple1);
+		questions.add(rate1);
+		questions.add(r1);
 		questions.add(o1);
 		questions.add(o2);
-		questions.add(d1);
-		questions.add(d2);
-
-//		questions.add(r2);
-//		questions.add(rate1);
-//		questions.add(sum1);
+		questions.add(r2);
+		questions.add(sum1);
 
 		// return the populated Questionable array list
 		return questions;
-
-		/**
-		 * DECLARE CODE GENERATED DATA END
-		 * */
 	}
 
 }
