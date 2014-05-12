@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 import com.smdp.surveytoandroid.questionstructure.MultipleChoiceQuestion;
 import com.smdp.surveytoandroid.questionstructure.OpenQuestion;
+import com.smdp.surveytoandroid.questionstructure.Question;
 import com.smdp.surveytoandroid.questionstructure.Questionable;
 import com.smdp.surveytoandroid.questionstructure.RankingQuestion;
 import com.smdp.surveytoandroid.questionstructure.RatingQuestion;
@@ -84,7 +85,6 @@ public class QuestionActivity extends Activity {
 		// if we have reached the end of the questions
 		// start the result activity and pass the answers data
 		if (questions.size() == quid) {
-			Log.e("test", "test");
 			// pass data to next activity
 			quid = 0;
 			Intent intent = new Intent(QuestionActivity.this,
@@ -96,20 +96,21 @@ public class QuestionActivity extends Activity {
 		} else {
 			for (int i = quid; i < questions.size(); i++) {
 				if (questions.get(quid) instanceof MultipleChoiceQuestion) {
+					// specific multi choice question
+					final MultipleChoiceQuestion multiQuest = ((MultipleChoiceQuestion) (questions
+							.get(quid)));
 					// initial set of the required field
-					if (((MultipleChoiceQuestion) (questions.get(quid)))
-							.isRequired()) {
+					if (multiQuest.isRequired()) {
 						txtRequired.setVisibility(View.VISIBLE);
 					} else {
 						txtRequired.setVisibility(View.GONE);
 					}
+
 					// check if the other field is enabled and if not disable
 					// the
 					// visibility
-					if (((MultipleChoiceQuestion) (questions.get(quid)))
-							.getOther().trim().length() > 0) {
-						txtOther.setText(((MultipleChoiceQuestion) (questions
-								.get(quid))).getOther());
+					if (multiQuest.getOther().trim().length() > 0) {
+						txtOther.setText(multiQuest.getOther());
 						txtOther.setVisibility(View.VISIBLE);
 						openOther.setVisibility(View.VISIBLE);
 					} else {
@@ -118,25 +119,21 @@ public class QuestionActivity extends Activity {
 						openOther.setVisibility(View.GONE);
 					}
 
-					txtQuestion.setText(((MultipleChoiceQuestion) (questions
-							.get(quid))).getQuestion());
+					txtQuestion.setText(multiQuest.getQuestion());
 
 					/*
 					 * generate dynamically check boxes OR radio buttons if the
 					 * question has 2 options based on the number of choices in
 					 * the choices array list of the question
 					 */
-					if (((MultipleChoiceQuestion) (questions.get(quid))).choices
-							.size() == 2) {
+					if (multiQuest.choices.size() == 2) {
 						radiogroup.clearCheck();
 						radiogroup.removeAllViews();
 						// generate radio buttons based on the choices
-						for (int e = 0; e < ((MultipleChoiceQuestion) (questions
-								.get(quid))).choices.size(); e++) {
+						for (int e = 0; e < multiQuest.choices.size(); e++) {
 							RadioButton rb = new RadioButton(this);
 							rb.setId(e);
-							rb.setText(((MultipleChoiceQuestion) (questions
-									.get(quid))).choices.get(e)
+							rb.setText(multiQuest.choices.get(e)
 									.getDescription().toString());
 							radiogroup.addView(rb);
 
@@ -144,12 +141,10 @@ public class QuestionActivity extends Activity {
 						// dynamic check box creation
 					} else {
 						viewll.removeAllViews();
-						for (int e = 0; e < ((MultipleChoiceQuestion) (questions
-								.get(quid))).choices.size(); e++) {
+						for (int e = 0; e < multiQuest.choices.size(); e++) {
 							CheckBox cb = new CheckBox(this);
 							cb.setId(e);
-							cb.setText(((MultipleChoiceQuestion) (questions
-									.get(quid))).choices.get(e)
+							cb.setText(multiQuest.choices.get(e)
 									.getDescription().toString());
 							viewll.addView(cb);
 
@@ -167,8 +162,7 @@ public class QuestionActivity extends Activity {
 							// based on the radio button selected
 							if (radiogroup.getChildCount() > 0) {
 								// if a question is required
-								if (((MultipleChoiceQuestion) (questions
-										.get(quid))).isRequired()
+								if (multiQuest.isRequired()
 										&& radiogroup.getCheckedRadioButtonId() == -1) {
 									txtRequired
 											.setText("This question is required!");
@@ -187,6 +181,8 @@ public class QuestionActivity extends Activity {
 										// add the answer to the array list
 										answers.put(txtQuestion.getText()
 												.toString(), values);
+										// manage multi choice forks
+										manageForks(multiQuest, values);
 									}
 
 									// else we clear the radio group
@@ -218,8 +214,7 @@ public class QuestionActivity extends Activity {
 								// picked up as an answer update text view to
 								// complain
 								// about it
-								if (((MultipleChoiceQuestion) (questions
-										.get(quid))).isRequired()
+								if (multiQuest.isRequired()
 										&& openOther.getText().toString()
 												.trim().length() == 0
 										&& !oneChecked) {
@@ -257,15 +252,16 @@ public class QuestionActivity extends Activity {
 													Log.e("Answer",
 															" " + cb.getText());
 													values.add(cb.getText()
-															.toString()+",");
+															.toString() + ",");
 													// add the answer to the
 													// HashMap
 													answers.put(txtQuestion
 															.getText()
 															.toString(), values);
-
 												}
 											}
+											// manage multi choice forks
+											manageForks(multiQuest, values);
 
 										}
 									} else if (oneChecked) {
@@ -291,21 +287,11 @@ public class QuestionActivity extends Activity {
 
 											}
 										}
+										// manage multi choice forks
+										manageForks(multiQuest, values);
+
 									}
 								}
-
-								/*
-								 * // // test multi forks // if
-								 * (((MultipleChoiceQuestion) //
-								 * (questions.get(quid))).forks // .size() >= 0)
-								 * { // for (int j = 0; j <
-								 * ((MultipleChoiceQuestion) // (questions //
-								 * .get(quid))).forks.size(); j++) { // // if //
-								 * (((MultipleChoiceQuestion)(questions
-								 * .get(quid))).forks
-								 * .get(j).bindingChoiceQuest.get()) // { // //
-								 * } // // } // } else {
-								 */
 
 								// clear linear layout
 								// set other fields visibility to gone
@@ -324,8 +310,11 @@ public class QuestionActivity extends Activity {
 					});
 
 				} else if ((questions.get(quid)) instanceof OpenQuestion) {
+					// specific open question
+					final OpenQuestion openQuest = ((OpenQuestion) (questions
+							.get(quid)));
 					// initial set of the required field
-					if (((OpenQuestion) (questions.get(quid))).isRequired()) {
+					if (openQuest.isRequired()) {
 
 						txtRequired.setVisibility(View.VISIBLE);
 					} else {
@@ -335,8 +324,7 @@ public class QuestionActivity extends Activity {
 					txtOther.setVisibility(View.VISIBLE);
 					txtOther.setText("Open:");
 					// set question
-					txtQuestion.setText(((OpenQuestion) (questions.get(quid)))
-							.getQuestion());
+					txtQuestion.setText(openQuest.getQuestion());
 
 					butNext.setOnClickListener(new View.OnClickListener() {
 						@Override
@@ -345,8 +333,7 @@ public class QuestionActivity extends Activity {
 							// it will be passed to the answers hash map
 							ArrayList<String> values = new ArrayList<String>();
 							// if a question is required
-							if (((OpenQuestion) (questions.get(quid)))
-									.isRequired()
+							if (openQuest.isRequired()
 									&& openOther.getText().toString().trim()
 											.length() == 0) {
 								txtRequired
@@ -382,22 +369,22 @@ public class QuestionActivity extends Activity {
 					});
 				} else if ((questions.get(quid)) instanceof RankingQuestion) {
 					viewll.removeAllViews();
+					// specific ranking question
+					final RankingQuestion rankQuest = ((RankingQuestion) (questions
+							.get(quid)));
 					// initial set of the required field
-					if (((RankingQuestion) (questions.get(quid))).isRequired()) {
+					if (rankQuest.isRequired()) {
 
 						txtRequired.setVisibility(View.VISIBLE);
 					} else {
 						txtRequired.setVisibility(View.GONE);
 					}
-					txtQuestion
-							.setText(((RankingQuestion) (questions.get(quid)))
-									.getQuestion());
+					txtQuestion.setText(rankQuest.getQuestion());
 
 					// will hold the number of the choices in an array list
 					ArrayList<Integer> choiceRankNumber = new ArrayList<Integer>();
 					// iterate over the choices and put them in one array list
-					for (int j = 0; j < ((RankingQuestion) (questions.get(quid))).choices
-							.size(); j++) {
+					for (int j = 0; j < rankQuest.choices.size(); j++) {
 
 						int number;
 						number = j + 1;
@@ -405,17 +392,18 @@ public class QuestionActivity extends Activity {
 					}
 					// there can be many choices each having its own spinner to
 					// indicate the ranking options
-					for (int e = 0; e < ((RankingQuestion) (questions.get(quid))).choices
-							.size(); e++) {
+					for (int e = 0; e < rankQuest.choices.size(); e++) {
 						// create the text views for the choices that must be
 						// ranked
 						TextView tv = new TextView(this);
-						tv.setText(((RankingQuestion) (questions.get(quid))).choices
-								.get(e).getDescription().toString());
+						tv.setText(rankQuest.choices.get(e).getDescription()
+								.toString());
 						// set properties of the text views
 						tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
 						tv.setTextColor(Color.parseColor("#abaaaa"));
-						LayoutParams lp = new LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.WRAP_CONTENT);
+						LayoutParams lp = new LayoutParams(
+								LayoutParams.WRAP_CONTENT,
+								LayoutParams.WRAP_CONTENT);
 						lp.setMargins(0, 0, 10, 0);
 						tv.setLayoutParams(lp);
 						tv.setId(e);
@@ -451,6 +439,8 @@ public class QuestionActivity extends Activity {
 							// make a new array list to hold the results
 							// it will be passed to the answers hash map
 							ArrayList<String> values = new ArrayList<String>();
+							// will be passed to the fork method
+							ArrayList<String> answersValues = new ArrayList<String>();
 							// go through the main linear layout,get its linear
 							// layout childs
 							// get the spinner data out of the linear layout
@@ -469,13 +459,18 @@ public class QuestionActivity extends Activity {
 										// get the choice description
 										if (s instanceof TextView) {
 											option = ((TextView) s).getText()
-															.toString();
+													.toString();
 											// get the value rank of the choice
 										} else if (s instanceof Spinner) {
 											value = "-> Ranked:"
 													+ ((Spinner) s)
 															.getSelectedItem()
-															.toString()+ "\n";
+															.toString() + "\n";
+											// add spinner data to array list of
+											// answers
+											answersValues.add(((Spinner) s)
+													.getSelectedItem()
+													.toString());
 
 										}
 										// make the final answer
@@ -490,6 +485,8 @@ public class QuestionActivity extends Activity {
 
 								}
 							}
+							// manage rank choice forks
+							manageForks(rankQuest, answersValues);
 							// remove all dynamically added added views
 							viewll.removeAllViews();
 							// increment quid
@@ -503,27 +500,21 @@ public class QuestionActivity extends Activity {
 
 				} else if ((questions.get(quid)) instanceof StapleQuestion) {
 					viewll.removeAllViews();
+					// specific staple question
+					final StapleQuestion stapleQuest = ((StapleQuestion) (questions
+							.get(quid)));
 					// initial set of the required field
-					if (((StapleQuestion) (questions.get(quid))).isRequired()) {
+					if (stapleQuest.isRequired()) {
 
 						txtRequired.setVisibility(View.VISIBLE);
 					} else {
 						txtRequired.setVisibility(View.GONE);
 					}
 					// set question
-					txtQuestion
-							.setText(((StapleQuestion) (questions.get(quid)))
-									.getQuestion()
-									+ " "
-									+ ((StapleQuestion) (questions.get(quid)))
-											.getFirst()
-									+ " equals -5 "
-									+ ((StapleQuestion) (questions.get(quid)))
-											.getMid()
-									+ " equals 0 "
-									+ " "
-									+ ((StapleQuestion) (questions.get(quid)))
-											.getLast() + " equals 5 ");
+					txtQuestion.setText(stapleQuest.getQuestion() + " "
+							+ stapleQuest.getFirst() + " equals -5 "
+							+ stapleQuest.getMid() + " equals 0 " + " "
+							+ stapleQuest.getLast() + " equals 5 ");
 
 					// will hold the values in an array list
 					ArrayList<Integer> spinnerRateData = new ArrayList<Integer>();
@@ -559,7 +550,8 @@ public class QuestionActivity extends Activity {
 							// put the answers in the answer hashmap
 							answers.put(txtQuestion.getText().toString(),
 									values);
-
+							// manage staple forks
+							manageForks(stapleQuest, values);
 							// remove all programatically added added views
 							viewll.removeAllViews();
 							// increment quid
@@ -573,36 +565,26 @@ public class QuestionActivity extends Activity {
 
 				} else if ((questions.get(quid)) instanceof RatingQuestion) {
 					viewll.removeAllViews();
+					// specific rating question
+					final RatingQuestion rateQuest = ((RatingQuestion) (questions
+							.get(quid)));
 					// initial set of the required field
-					if (((RatingQuestion) (questions.get(quid))).isRequired()) {
+					if (rateQuest.isRequired()) {
 
 						txtRequired.setVisibility(View.VISIBLE);
 					} else {
 						txtRequired.setVisibility(View.GONE);
 					}
 					// set question
-					txtQuestion
-							.setText(((RatingQuestion) (questions.get(quid)))
-									.getQuestion()
-									+ " "
-									+ ((RatingQuestion) (questions.get(quid)))
-											.getFirst()
-									+ " equals "
-									+ ((RatingQuestion) (questions.get(quid)))
-											.getMin()
-									+ " "
-									+ ((RatingQuestion) (questions.get(quid)))
-											.getLast()
-									+ " equals "
-									+ +((RatingQuestion) (questions.get(quid)))
-											.getMax());
+					txtQuestion.setText(rateQuest.getQuestion() + " "
+							+ rateQuest.getFirst() + " equals "
+							+ rateQuest.getMin() + " " + rateQuest.getLast()
+							+ " equals " + rateQuest.getMax());
 
 					// will hold the values in an array list
 					ArrayList<Integer> spinnerRateData = new ArrayList<Integer>();
 					// iterate over the choices and put them in one array list
-					for (int j = ((RatingQuestion) (questions.get(quid)))
-							.getMin(); j <= (((RatingQuestion) (questions
-							.get(quid))).getMax()); j++) {
+					for (int j = rateQuest.getMin(); j <= rateQuest.getMax(); j++) {
 
 						int number;
 						number = j;
@@ -633,7 +615,8 @@ public class QuestionActivity extends Activity {
 							// put the answers in the answer hashmap
 							answers.put(txtQuestion.getText().toString(),
 									values);
-
+							// manage rating forks
+							manageForks(rateQuest, values);
 							// remove all programatically added added views
 							viewll.removeAllViews();
 							// increment quid
@@ -647,29 +630,28 @@ public class QuestionActivity extends Activity {
 
 				} else if ((questions.get(quid)) instanceof ConstantSumQuestion) {
 					viewll.removeAllViews();
+					// specific constant sum question
+					final ConstantSumQuestion constantSumQuest = ((ConstantSumQuestion) (questions
+							.get(quid)));
 					// initial set of the required field
-					if (((ConstantSumQuestion) (questions.get(quid)))
-							.isRequired()) {
+					if (constantSumQuest.isRequired()) {
 
 						txtRequired.setVisibility(View.VISIBLE);
 					} else {
 						txtRequired.setVisibility(View.GONE);
 					}
-					txtQuestion.setText(((ConstantSumQuestion) (questions
-							.get(quid))).getQuestion()
+					txtQuestion.setText(constantSumQuest.getQuestion()
 							+ " up to a total of "
-							+ ((ConstantSumQuestion) (questions.get(quid)))
-									.getConstant());
+							+ constantSumQuest.getConstant());
 					// there can be many choices each having its edit text to
 					// fill
 					// the value for the sum
-					for (int e = 0; e < ((ConstantSumQuestion) (questions
-							.get(quid))).choices.size(); e++) {
-						// create the textviews for the choices that must be
+					for (int e = 0; e < constantSumQuest.choices.size(); e++) {
+						// create the text views for the choices that must be
 						// ranked
 						TextView tv = new TextView(this);
-						tv.setText(((ConstantSumQuestion) (questions.get(quid))).choices
-								.get(e).getDescription().toString());
+						tv.setText(constantSumQuest.choices.get(e)
+								.getDescription().toString());
 						// set properties of the text views
 						tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
 						tv.setTextColor(Color.parseColor("#abaaaa"));
@@ -705,6 +687,8 @@ public class QuestionActivity extends Activity {
 							// make a new array list to hold the results
 							// it will be passed to the answers hash map
 							ArrayList<String> values = new ArrayList<String>();
+							// will be passed to the fork method
+							ArrayList<String> answersValues = new ArrayList<String>();
 							// go through the main linear layout,get its linear
 							// layout childs
 							// get the edit text data out of the linear layout
@@ -723,20 +707,41 @@ public class QuestionActivity extends Activity {
 										String value = "";
 										// get the choice description
 										if (s instanceof EditText) {
-											value = "-> Value:"
-													+ ((EditText) s).getText()
-															.toString() + "\n";
-											// parse the value of the edit text
-											// to integer
-											int sumValue = Integer
-													.parseInt(((EditText) s)
-															.getText()
-															.toString());
-											sumCount += sumValue;
+											if (((EditText) s).getText()
+													.toString().equals("")) {
+												txtRequired
+														.setText("Please specify values for the choices!");
+
+											} else {
+												value = "-> Value:"
+														+ ((EditText) s)
+																.getText()
+																.toString()
+														+ "\n";
+												// add edit text data to array
+												// list of
+												// answers
+												answersValues
+														.add(((EditText) s)
+																.getText()
+																.toString());
+												// parse the value of the edit
+												// text
+												// to integer
+												int sumValue = Integer
+														.parseInt(((EditText) s)
+																.getText()
+																.toString());
+												// if nothing is specified,
+												// display an error
+												sumCount += sumValue;
+
+											}
+
 											// get the value rank of the choice
 										} else if (s instanceof TextView) {
 											option = ((TextView) s).getText()
-															.toString();
+													.toString();
 
 										}
 										// make the final answer
@@ -747,17 +752,19 @@ public class QuestionActivity extends Activity {
 										values.add(answer);
 										answers.put(txtQuestion.getText()
 												.toString(), values);
+
 									}
+									// manage constant sum choice forks
+									manageForks(constantSumQuest, answersValues);
 
 								}
 							}
 							// if the sum does not match complain about it
-							if (((ConstantSumQuestion) (questions.get(quid)))
-									.getConstant() != sumCount) {
+							if (constantSumQuest.getConstant() != sumCount
+									&& constantSumQuest.isRequired()) {
 								txtRequired
 										.setText("The values does not add up to "
-												+ ((ConstantSumQuestion) (questions
-														.get(quid)))
+												+ constantSumQuest
 														.getConstant());
 								// remove the already added values
 								answers.remove(txtQuestion.getText().toString());
@@ -783,4 +790,194 @@ public class QuestionActivity extends Activity {
 		}
 	}
 
+	/* method to handle the forking */
+	private void manageForks(Questionable question, ArrayList<String> answers) {
+		// handle multiple choice forks
+		if (question instanceof MultipleChoiceQuestion) {
+			// cast to multi question
+			MultipleChoiceQuestion multiQuest = (MultipleChoiceQuestion) question;
+			// if this question has forks
+			if (multiQuest.forks.size() > 0) {
+				// for each fork
+				for (int j = 0; j < multiQuest.forks.size(); j++) {
+					// if the array list associated with the picked choice is
+					// not empty
+					for (int i = 0; i < answers.size(); i++) {
+						// for each answer
+						if (multiQuest.forks.get(j).bindingChoiceQuest
+								.get(answers.get(i)) != null) {
+							// for each question in the forked questions array
+							// list
+							for (int k = 0; k < multiQuest.forks.get(j).bindingChoiceQuest
+									.get(answers.get(i)).size(); k++) {
+								// cast to question
+								Question forkedQuestion = (Question) multiQuest.forks
+										.get(j).bindingChoiceQuest.get(
+										answers.get(i)).get(i);
+								Log.e("fork", forkedQuestion.getName() + " "
+										+ questions.indexOf(forkedQuestion));
+								// make the next question the forked question
+								quid = questions.indexOf(forkedQuestion) - 1;
+							}
+
+						}
+					}
+				}
+			}
+			// handle ranking forks
+		} else if (question instanceof RankingQuestion) {
+			// cast to rank question
+			RankingQuestion rankQuest = (RankingQuestion) question;
+			// if this question has forks
+			if (rankQuest.forks.size() > 0) {
+				// for each fork
+				for (int j = 0; j < rankQuest.forks.size(); j++) {
+					// for each choice
+					for (int i = 0; i < rankQuest.choices.size(); i++) {
+						// if this choices is used in a fork
+						if (rankQuest.forks.get(j).bindingChoiceQuest
+								.get(rankQuest.choices.get(i).getDescription()) != null) {
+							// for each forked question based on the choice
+							for (int l = 0; l < rankQuest.forks.get(j).bindingChoiceQuest
+									.get(rankQuest.choices.get(i)
+											.getDescription()).size(); l++) {
+								// parse the answered spinner value to an
+								// integer
+								int answer = Integer.parseInt(answers.get(i));
+								// check if the spinner value is between the
+								// fork min and max values
+								if (answer >= rankQuest.forks.get(j).getMin()
+										&& answer <= rankQuest.forks.get(j)
+												.getMax()) {
+									Question forkedQuestion = (Question) rankQuest.forks
+											.get(j).bindingChoiceQuest.get(
+											rankQuest.choices.get(i)
+													.getDescription()).get(i);
+									Log.e("fork",
+											forkedQuestion.getName()
+													+ " "
+													+ questions
+															.indexOf(forkedQuestion));
+									// make the next question the forked
+									// question
+									quid = questions.indexOf(forkedQuestion) - 1;
+								}
+
+							}
+						}
+					}
+				}
+			}
+
+			// handle constant sum forks
+		} else if (question instanceof ConstantSumQuestion) {
+			// cast to rank question
+			ConstantSumQuestion constSumQuest = (ConstantSumQuestion) question;
+			// if this question has forks
+			if (constSumQuest.forks.size() > 0) {
+				// for each fork
+				for (int j = 0; j < constSumQuest.forks.size(); j++) {
+					// for each choice
+					for (int i = 0; i < constSumQuest.choices.size(); i++) {
+						// if this choices is used in a fork
+						if (constSumQuest.forks.get(j).bindingChoiceQuest
+								.get(constSumQuest.choices.get(i)
+										.getDescription()) != null) {
+							// for each forked question based on the choice
+							for (int l = 0; l < constSumQuest.forks.get(j).bindingChoiceQuest
+									.get(constSumQuest.choices.get(i)
+											.getDescription()).size(); l++) {
+								// parse the answered spinner value to an
+								// integer
+								int answer = Integer.parseInt(answers.get(i));
+								// check if the spinner value is between the
+								// fork min and max values
+								if (answer >= constSumQuest.forks.get(j)
+										.getMin()
+										&& answer <= constSumQuest.forks.get(j)
+												.getMax()) {
+									Question forkedQuestion = (Question) constSumQuest.forks
+											.get(j).bindingChoiceQuest.get(
+											constSumQuest.choices.get(i)
+													.getDescription()).get(i);
+									Log.e("fork",
+											forkedQuestion.getName()
+													+ " "
+													+ questions
+															.indexOf(forkedQuestion));
+									// make the next question the forked
+									// question
+									quid = questions.indexOf(forkedQuestion) - 1;
+								}
+
+							}
+						}
+					}
+				}
+			}
+
+			// handle rating forks
+		} else if (question instanceof RatingQuestion) {
+			// cast to rank question
+			RatingQuestion rateQuest = (RatingQuestion) question;
+			// if this question has forks
+			if (rateQuest.forks.size() > 0) {
+				// for each fork
+				for (int j = 0; j < rateQuest.forks.size(); j++) {
+					// parse the answer to integer
+					int answer = Integer.parseInt(answers.get(0));
+					// if the answer is between the specified min and max in the
+					// fork
+					if (answer >= rateQuest.forks.get(j).getMin()
+							&& answer <= rateQuest.forks.get(j).getMax()) {
+						// for each question in the forked questions array
+						// list
+						for (int k = 0; k < rateQuest.forks.get(j).forkQues
+								.size(); k++) {
+							// cast to question
+							Question forkedQuestion = (Question) rateQuest.forks
+									.get(j).forkQues.get(k);
+							Log.e("fork", forkedQuestion.getName() + " "
+									+ questions.indexOf(forkedQuestion));
+							// make the next question the forked question
+							quid = questions.indexOf(forkedQuestion) - 1;
+						}
+
+					}
+				}
+			}
+
+			// handle staple forks
+		} else if (question instanceof StapleQuestion) {
+			// cast to rank question
+			StapleQuestion stapleQuest = (StapleQuestion) question;
+			// if this question has forks
+			if (stapleQuest.forks.size() > 0) {
+				// for each fork
+				for (int j = 0; j < stapleQuest.forks.size(); j++) {
+					// parse the answer to integer
+					int answer = Integer.parseInt(answers.get(0));
+					// if the answer is between the specified min and max in the
+					// fork
+					if (answer >= stapleQuest.forks.get(j).getMin()
+							&& answer <= stapleQuest.forks.get(j).getMax()) {
+						// for each question in the forked questions array
+						// list
+						for (int k = 0; k < stapleQuest.forks.get(j).forkQues
+								.size(); k++) {
+							// cast to question
+							Question forkedQuestion = (Question) stapleQuest.forks
+									.get(j).forkQues.get(k);
+							Log.e("fork", forkedQuestion.getName() + " "
+									+ questions.indexOf(forkedQuestion));
+							// make the next question the forked question
+							quid = questions.indexOf(forkedQuestion) - 1;
+						}
+
+					}
+				}
+			}
+
+		}
+	}
 }

@@ -6,7 +6,7 @@ import java.util.HashMap;
 //will represent the forks
 public class Fork {
 	// will represent the binding between choices and questions for the fork
-	// applicable to multichoice, ranking, constant sum
+	// applicable to multiple choice, ranking, constant sum
 	public HashMap<String, ArrayList<Questionable>> bindingChoiceQuest = new HashMap<String, ArrayList<Questionable>>();
 	// applicable to stable and rating
 	public ArrayList<Questionable> forkQues = new ArrayList<Questionable>();
