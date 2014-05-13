@@ -754,8 +754,6 @@ public class QuestionActivity extends Activity {
 												.toString(), values);
 
 									}
-									// manage constant sum choice forks
-									manageForks(constantSumQuest, answersValues);
 
 								}
 							}
@@ -770,6 +768,8 @@ public class QuestionActivity extends Activity {
 								answers.remove(txtQuestion.getText().toString());
 
 							} else {
+								// manage constant sum choice forks
+								manageForks(constantSumQuest, answersValues);
 								txtRequired.setText("Required");
 								txtRequired.setVisibility(View.GONE);
 								// remove all dynamically added added views
