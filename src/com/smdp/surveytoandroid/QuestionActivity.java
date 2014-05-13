@@ -852,7 +852,7 @@ public class QuestionActivity extends Activity {
 									Question forkedQuestion = (Question) rankQuest.forks
 											.get(j).bindingChoiceQuest.get(
 											rankQuest.choices.get(i)
-													.getDescription()).get(i);
+													.getDescription()).get(j);
 									Log.e("fork",
 											forkedQuestion.getName()
 													+ " "
@@ -899,7 +899,7 @@ public class QuestionActivity extends Activity {
 									Question forkedQuestion = (Question) constSumQuest.forks
 											.get(j).bindingChoiceQuest.get(
 											constSumQuest.choices.get(i)
-													.getDescription()).get(i);
+													.getDescription()).get(j);
 									Log.e("fork",
 											forkedQuestion.getName()
 													+ " "
